@@ -332,7 +332,10 @@ describe('extend', function(){
 			assert.strictEqual( typeof p.dec, 'function' );
 			assert.strictEqual( typeof p.get, 'function' );
 
-			p.inc(500).dec(750).getx().then(function(x) {
+			p.inc(500).dec(750).then(function(foobar) {
+				assert.strictEqual(foobar.x, 1000 + 500 - 750);
+				return foobar;
+			}).getx().then(function(x) {
 				assert.strictEqual( x, 1000 + 500 - 750 );
 				done();
 			}).fail(function(err) {
