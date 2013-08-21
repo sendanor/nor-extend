@@ -346,6 +346,53 @@ describe('extend', function(){
 			}).done();
 		});
 
+		it('should extend Q promise with async methods from Foobar and support method call chaining with changing object to Array', function(done){
+			function Foobar(x) {
+				this.x = x;
+			}
+
+			Foobar.create = function(x) {
+				var defer = Q.defer();
+				setTimeout(function() {
+					try {
+						defer.resolve( new Foobar(x) );
+					} catch(e) {
+						defer.reject(e);
+					}
+				}, 50);
+				return extend.promise( extend.getMethodNamesFromConstructor(Foobar, Array), defer.promise);
+			};
+
+			Foobar.prototype.query = function(x) {
+				var self = this;
+				var defer = Q.defer();
+				setTimeout(function() {
+					try {
+						assert.strictEqual(typeof x, 'number');
+						assert.strictEqual(typeof self.x, 'number');
+						assert.ok(self.x);
+						defer.resolve( [self.x, x] );
+					} catch(e) {
+						defer.reject(e);
+					}
+				}, 50);
+				return extend.promise( extend.getMethodNamesFromConstructor(Array), defer.promise);
+			};
+
+			var p = Foobar.create(1000);
+
+			assert.strictEqual( typeof p, 'object' );
+			assert.strictEqual( typeof p.$query, 'function' );
+			assert.strictEqual( typeof p.$shift, 'function' );
+
+			p.$query(500).$shift().then(function(x) {
+				assert.strictEqual(x, 1000);
+				done();
+			}).fail(function(err) {
+				done(err);
+			}).done();
+		});
+
 	});
 
 
