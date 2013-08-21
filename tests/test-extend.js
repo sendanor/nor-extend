@@ -5,7 +5,7 @@ var assert = require('assert');
 var Q = require('q');
 
 function get_names(obj) {
-	return Object.getOwnPropertyNames(obj).filter(function(x) { return ((x === 'constructor') ? false : true); });
+	return Object.getOwnPropertyNames(obj).filter(function(x) { return (['constructor', 'toString', 'toLocaleString'].indexOf(x) >= 0) ? false : true; });
 }
 
 /* */
