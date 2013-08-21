@@ -5,7 +5,7 @@ var assert = require('assert');
 var Q = require('q');
 
 function get_names(obj) {
-	return Object.getOwnPropertyNames(obj).filter(function(x) { return (['constructor', 'toString', 'toLocaleString'].indexOf(x) >= 0) ? false : true; });
+	return Object.getOwnPropertyNames(obj);
 }
 
 /* */
@@ -137,7 +137,7 @@ describe('extend', function(){
 				return this;
 			};
 
-			Foobar.prototype.getx = function() {
+			Foobar.prototype.get = function() {
 				assert.strictEqual(typeof this.x, 'number');
 				assert.ok(this.x);
 				return this.x;
@@ -157,9 +157,9 @@ describe('extend', function(){
 			assert.strictEqual( typeof extended_p.dec, 'function' );
 			assert.strictEqual( typeof extended_p.get, 'function' );
 
-			assert.strictEqual( new Foobar(1000).inc(500).dec(750).getx(), 1000 + 500 - 750);
+			assert.strictEqual( new Foobar(1000).inc(500).dec(750).get(), 1000 + 500 - 750);
 
-			extended_p.inc(500).dec(750).getx().then(function(x) {
+			extended_p.inc(500).dec(750).$get().then(function(x) {
 				assert.strictEqual( x, 1000 + 500 - 750 );
 				done();
 			}).fail(function(err) {
@@ -222,7 +222,7 @@ describe('extend', function(){
 				return defer.promise;
 			};
 
-			Foobar.prototype.getx = function() {
+			Foobar.prototype.get = function() {
 				var self = this;
 				var defer = Q.defer();
 				setTimeout(function() {
@@ -247,7 +247,7 @@ describe('extend', function(){
 			assert.strictEqual( typeof extended_p.dec, 'function' );
 			assert.strictEqual( typeof extended_p.get, 'function' );
 
-			extended_p.inc(500).dec(750).getx().then(function(x) {
+			extended_p.inc(500).dec(750).$get().then(function(x) {
 				assert.strictEqual( x, 1000 + 500 - 750 );
 				done();
 			}).fail(function(err) {
@@ -310,7 +310,7 @@ describe('extend', function(){
 				return extend.promise( extend.getMethodNamesFromConstructor(Foobar), defer.promise);
 			};
 
-			Foobar.prototype.getx = function() {
+			Foobar.prototype.get = function() {
 				var self = this;
 				var defer = Q.defer();
 				setTimeout(function() {
@@ -338,7 +338,7 @@ describe('extend', function(){
 			}).dec(750).then(function(foobar) {
 				assert.strictEqual(foobar.x, 1000 + 500 - 750);
 				return foobar;
-			}).getx().then(function(x) {
+			}).$get().then(function(x) {
 				assert.strictEqual( x, 1000 + 500 - 750 );
 				done();
 			}).fail(function(err) {
