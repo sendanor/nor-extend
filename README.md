@@ -17,6 +17,18 @@ Let's say you have a `Foobar` constructor which has methods that are
 returning promises and you want to extend these promises so that you can chain 
 your own asynchronous methods directly.
 
+Normally you would need to use it like this: 
+
+	Foobar.start().then(function(foobar) {
+		return foobar.insert({id:100});
+	}).then(function(foobar) {
+		foobar.commit();
+	});
+
+With extended promises you can use it like this:
+
+	Foobar.start().insert({id:100}).commit();
+
 Please note, this is not the simplest example but it shows most features. Check our tests for all supported features.
 
 Here is how you implement your custom `Foobar`:
