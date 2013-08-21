@@ -1,3 +1,5 @@
+[![Build Status](https://secure.travis-ci.org/Sendanor/nor-extend.png?branch=master)](http://travis-ci.org/Sendanor/nor-extend)
+
 nor-extend
 ==========
 
