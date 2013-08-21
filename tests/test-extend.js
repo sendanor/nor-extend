@@ -167,6 +167,7 @@ describe('extend', function(){
 			}).done();
 		});
 
+
 		it('should extend Q promise with async methods from Foobar and support method call chaining', function(done){
 			function Foobar(x) {
 				assert.strictEqual(typeof x, 'number');
@@ -247,6 +248,91 @@ describe('extend', function(){
 			assert.strictEqual( typeof extended_p.get, 'function' );
 
 			extended_p.inc(500).dec(750).getx().then(function(x) {
+				assert.strictEqual( x, 1000 + 500 - 750 );
+				done();
+			}).fail(function(err) {
+				done(err);
+			}).done();
+		});
+
+
+		it('should extend Q promise with async methods from Foobar (style 2) and support method call chaining', function(done){
+			function Foobar(x) {
+				assert.strictEqual(typeof x, 'number');
+				this.x = x;
+				assert.strictEqual(typeof this.x, 'number');
+				assert.ok(this.x);
+			}
+
+			Foobar.create = function(x) {
+				var defer = Q.defer();
+				setTimeout(function() {
+					try {
+						defer.resolve( new Foobar(x) );
+					} catch(e) {
+						defer.reject(e);
+					}
+				}, 50);
+				return extend.promise( extend.getMethodNamesFromConstructor(Foobar), defer.promise);
+			};
+
+			Foobar.prototype.inc = function(x) {
+				var self = this;
+				var defer = Q.defer();
+				setTimeout(function() {
+					try {
+						assert.strictEqual(typeof self.x, 'number');
+						assert.strictEqual(typeof x, 'number');
+						self.x += x; 
+						assert.ok(self.x);
+						defer.resolve(self);
+					} catch(e) {
+						defer.reject(e);
+					}
+				}, 50);
+				return extend.promise( extend.getMethodNamesFromConstructor(Foobar), defer.promise);
+			};
+
+			Foobar.prototype.dec = function(x) {
+				var self = this;
+				var defer = Q.defer();
+				setTimeout(function() {
+					try {
+						assert.strictEqual(typeof self.x, 'number');
+						assert.strictEqual(typeof x, 'number');
+						self.x -= x; 
+						assert.ok(self.x);
+						defer.resolve(self);
+					} catch(e) {
+						defer.reject(e);
+					}
+				}, 50);
+				return extend.promise( extend.getMethodNamesFromConstructor(Foobar), defer.promise);
+			};
+
+			Foobar.prototype.getx = function() {
+				var self = this;
+				var defer = Q.defer();
+				setTimeout(function() {
+					try {
+						assert.strictEqual(typeof self.x, 'number');
+						assert.ok(self.x);
+						defer.resolve(self.x);
+					} catch(e) {
+						defer.reject(e);
+					}
+				}, 50);
+				return extend.promise( extend.getMethodNamesFromConstructor(Foobar), defer.promise);
+			};
+
+			var p = Foobar.create(1000);
+
+			assert.strictEqual( typeof p, 'object' );
+			assert.strictEqual( typeof p.inc, 'function' );
+			assert.strictEqual( typeof p.dec, 'function' );
+			assert.strictEqual( typeof p.get, 'function' );
+
+			p.inc(500).dec(750).getx().then(function(x) {
 				assert.strictEqual( x, 1000 + 500 - 750 );
 				done();
 			}).fail(function(err) {
