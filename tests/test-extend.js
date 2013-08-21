@@ -360,7 +360,7 @@ describe('extend', function(){
 						defer.reject(e);
 					}
 				}, 50);
-				return extend.promise( extend.getMethodNamesFromConstructor(Foobar, Array), defer.promise);
+				return extend.promise( [Foobar, Array], defer.promise);
 			};
 
 			Foobar.prototype.query = function(x) {
