@@ -376,7 +376,7 @@ describe('extend', function(){
 						defer.reject(e);
 					}
 				}, 50);
-				return extend.promise( extend.getMethodNamesFromConstructor(Array), defer.promise);
+				return extend.promise( Array, defer.promise);
 			};
 
 			var p = Foobar.create(1000);
