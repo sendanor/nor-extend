@@ -19,15 +19,15 @@ your own asynchronous methods directly.
 
 Normally you would need to use it like this: 
 
-	Foobar.start().then(function(foobar) {
+	var p = Foobar.start().then(function(foobar) {
 		return foobar.insert({id:100});
 	}).then(function(foobar) {
-		foobar.commit();
+		return foobar.commit();
 	});
 
 With extended promises you can use it like this:
 
-	Foobar.start().insert({id:100}).commit();
+	var p = Foobar.start().insert({id:100}).commit();
 
 Please note, this is not the simplest example but it shows most features. Check our tests for all supported features.
 
