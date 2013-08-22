@@ -73,6 +73,19 @@ describe('extend', function(){
 			assert.strictEqual( extended_obj.bar(), 2 );
 		});
 
+		it('should extend ["hello", "world"] with methods from Foo without methods param', function(){
+			function Foo() { }
+			Foo.prototype.foo = function() { return 1; }
+			Foo.prototype.bar = function() { return 2; }
+			var foo = new Foo();
+			var obj = ["hello", "world"];
+			var extended_obj = extend.object(foo, obj);
+			assert.strictEqual( extended_obj[0], "hello" );
+			assert.strictEqual( extended_obj[1], "world" );
+			assert.strictEqual( extended_obj.foo(), 1 );
+			assert.strictEqual( extended_obj.bar(), 2 );
+		});
+
 		it('should extend ["hello", "world"] with methods from Foo and Bar', function(){
 			function Bar() {
 			}
