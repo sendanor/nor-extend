@@ -52,7 +52,7 @@ Foobar.start = function() {
 	var p = DB.start().then(function(conn) {
 		return new Foobar(conn);
 	});
-return extend.promise( [Foobar, Array], p);
+	return extend.promise( [Foobar, Array], p);
 };
 
 Foobar.commit = function() {
