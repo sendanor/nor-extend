@@ -13,8 +13,8 @@ The lib can be installed from the NPM by `npm install nor-extend`.
 Projects using `nor-extend`
 ---------------------------
 
-* [nor-fs](https://github.com/Sendanor/nor-fs)
-* [nor-db](https://github.com/Sendanor/nor-db)
+* [nor-fs](https://github.com/Sendanor/nor-fs#nor-fs)
+* [nor-db](https://github.com/Sendanor/nor-db#nor-db)
 
 Example usage
 -------------
