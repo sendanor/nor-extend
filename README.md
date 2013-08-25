@@ -5,10 +5,16 @@ nor-extend
 
 Extend Q promises with methods from another object prototype.
 
-Install
--------
+Installation
+------------
 
-The lib can be installed from NPM by `npm install nor-extend`.
+The lib can be installed from the NPM by `npm install nor-extend`.
+
+Projects using `nor-extend`
+---------------------------
+
+* [nor-fs](https://github.com/Sendanor/nor-fs)
+* [nor-db](https://github.com/Sendanor/nor-db)
 
 Example usage
 -------------
