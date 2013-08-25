@@ -85,6 +85,11 @@ Here is how you can use `Foobar` now:
 You don't actually need to use $-prefixes in methods unless they overlap with methods from `Object.prototype` or `Q.makePromise.prototype`. The library will create 
 aliases for both styles, so `p.getById(100).shift()` probably works, too.
 
+TODO
+----
+
+* Support for passing on reference to `this` like `db.query('...').then(function(rows) { return this.query('...', rows[0].id); }`
+
 Non-supported method names when using without $ prefix
 ------------------------------------------------------
 
