@@ -2,7 +2,7 @@
   "name": "nor-extend",
   "version": "0.1.9",
   "description": "Extends Q promises with custom methods from another object",
-  "main": "lib/extend.js",
+  "main": "lib/index.js",
   "scripts": {
     "test": "mocha -R spec tests/test-*.js"
   },
