@@ -1,6 +1,6 @@
 {
   "name": "nor-extend",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Extends Q promises with custom methods from another object",
   "main": "lib/extend.js",
   "scripts": {

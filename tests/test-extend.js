@@ -441,6 +441,26 @@ describe('extend', function(){
 	});
 
 
+	// extend.copy(obj)
+	describe('.copy()', function(){
+		it('should copy an object', function(){
+			var obj = {'foo':'bar'};
+			var obj2 = extend.copy(obj);
+			assert.strictEqual( obj2.foo, obj.foo );
+			obj.foo = 'hello world';
+			assert.strictEqual( obj.foo, 'hello world' );
+			assert.strictEqual( obj2.foo, 'bar' );
+		});
+		it('should deep copy an object', function(){
+			var obj = {'foo':{'hello':'world'}};
+			var obj2 = extend.copy(obj);
+			assert.strictEqual( obj2.foo.hello, 'world' );
+			obj.foo.hello = 'hello world';
+			assert.strictEqual( obj.foo.hello, 'hello world' );
+			assert.strictEqual( obj2.foo.hello, 'world' );
+		});
+	});
+
 });
 
 /* EOF */
