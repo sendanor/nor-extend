@@ -1,6 +1,6 @@
 {
   "name": "nor-extend",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "description": "Extends Q promises with custom methods from another object",
   "main": "lib/index.js",
   "scripts": {
@@ -26,8 +26,8 @@
     "url" : "https://github.com/sendanor/nor-extend/issues"
   },
   "dependencies": {
-    "q": "*",
-    "nor-is": "*"
+    "q": ">= 1.0.0 <1.1.0",
+    "nor-is": ">= 0.1.9 <0.2.0"
   },
   "devDependencies": {
     "lint": "*",
