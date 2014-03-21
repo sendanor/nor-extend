@@ -26,7 +26,7 @@
     "url" : "https://github.com/sendanor/nor-extend/issues"
   },
   "dependencies": {
-    "q": ">= 1.0.0 <1.1.0",
+    "q": ">= 1.0.1 <1.1.0",
     "nor-is": ">= 0.1.10 <0.2.0",
     "nor-debug": ">= 0.1.21 <0.2.0"
   },
