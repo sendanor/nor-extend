@@ -1,5 +1,7 @@
 /** */
 
+"use strict";
+
 var util = require("util");
 var events = require("events");
 var extend = require('./extend.js');
@@ -35,7 +37,6 @@ ActionObject.prototype._save = function(result){
 
 /** Fetch all resources */
 ActionObject.prototype.fetchAll = function(){
-	var self = this;
 	var all = this._results;
 	this._results = [];
 	return all;
@@ -43,7 +44,6 @@ ActionObject.prototype.fetchAll = function(){
 
 /** Fetch next result from the internal result array */
 ActionObject.prototype.fetch = function(){
-	var self = this;
 	return this._results.shift();
 };
 

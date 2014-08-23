@@ -1,6 +1,6 @@
 "use strict";
 
-var extend = require('../lib/extend.js').setup({useFunctionPromises:true});
+var extend = require('nor-extend').setup({useFunctionPromises:true});
 var assert = require('assert');
 var Q = require('q');
 

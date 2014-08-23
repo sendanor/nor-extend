@@ -1,6 +1,6 @@
 "use strict";
 
-var extend = require('../lib/extend.js');
+var extend = require('nor-extend');
 var assert = require('assert');
 var Q = require('q');
 

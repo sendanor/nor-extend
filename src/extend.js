@@ -1,21 +1,52 @@
 /* Generic Node.js Database Library */
 "use strict";
 
+var ARRAY = require('nor-array');
 var Q = require('q');
 var is = require('nor-is');
 
-module.exports = setup();
+/** Copy object */
+function extend_copy(obj) {
+	return JSON.parse(JSON.stringify(obj));
+}
 
+/** Get method names from an object's constructor
+ * @param {function} Object constructor function
+ * @returns {array} Method names
+ */
+function get_method_names_from_constructor() {
+	var ret = [];
+	var args = Array.prototype.slice.call(arguments);
+	ARRAY(args).forEach(function(fun) {
+		if(is.array(fun)) {
+			ARRAY(fun).forEach(function(x) { ret.push.apply(ret, get_method_names_from_constructor(x)); });
+			return;
+		}
+		if(fun && fun.prototype) {
+			ret.push.apply(ret, Object.getOwnPropertyNames(fun.prototype));
+		}
+	});
+	return ret;
+}
+
+/* Parse array of constructor functions */
+function get_all_methods(arr) {
+	return ARRAY(arr).map(function(m) {
+		return get_method_names_from_constructor(m);
+	}).reduce(function(prev, current) {
+		return prev.concat(current);
+	}, ARRAY([]) ).valueOf();
+}
+
+/** Setup function */
 function setup(opts) {
 	opts = opts || {};
 
 	var extend = {};
-
 	extend.setup = setup;
-
 	extend.warnings = opts.warnings || false;
-
 	extend.useFunctionPromises = opts.useFunctionPromises || false;
+	extend.getMethodNamesFromConstructor = get_method_names_from_constructor;
 
 	/** Extended promise constructor */
 	function ExtendedPromise() {
@@ -51,26 +82,6 @@ function setup(opts) {
 	extend.Promise = ExtendedPromise;
 	extend.ExtendedPromise = ExtendedPromise;
 
-	/** Get method names from an object's constructor
-	 * @param {function} Object constructor function
-	 * @returns {array} Method names
-	 */
-	extend.getMethodNamesFromConstructor = function() {
-		//debug_call('extend.getMethodNamesFromConstructor', Array.prototype.slice.call(arguments) );
-		var ret = [];
-		var args = Array.prototype.slice.call(arguments);
-		ARRAY(args).forEach(function(fun) {
-			if(is.array(fun)) {
-				ARRAY(fun).forEach(function(x) { ret.push.apply(ret, extend.getMethodNamesFromConstructor(x)); });
-				return;
-			}
-			if(fun && fun.prototype) {
-				ret.push.apply(ret, Object.getOwnPropertyNames(fun.prototype));
-			}
-		});
-		return ret;
-	};
-
 	/** Get method names from an object's prototype
 	 * @param {object} Object where to get method names
 	 * @returns {array} Method names
@@ -98,15 +109,6 @@ function setup(opts) {
 			return extend.object(self2, extend.getMethodNamesFromObject(self2), methods);
 		}
 
-		/* Parse array of constructor functions */
-		function get_all_methods(arr) {
-			return ARRAY(arr).map(function(m) {
-				return extend.getMethodNamesFromConstructor(m);
-			}).reduce(function(prev, current) {
-				return prev.concat(current);
-			}, ARRAY([]) ).valueOf();
-		}
-
 		// Implement style extend.object(foo, [Foobar, Array], bar)
 		if(is.array(methods) && is.callable(methods[0])) {
 			return extend.object(self2, get_all_methods(methods) , obj);
@@ -117,7 +119,7 @@ function setup(opts) {
 			return extend.object(self2, extend.getMethodNamesFromConstructor(methods) , obj);
 		}
 
-
+		//
 		ARRAY(methods).forEach(function(key) {
 			if(obj['$'+key] !== undefined) {
 				if(extend.warnings) { console.warn("Warning! Ignored `$"+key+"` since it is defined already!"); }
@@ -146,13 +148,6 @@ function setup(opts) {
 	extend.promise = function(methods, p) { // original extend_promise
 		//debug_call('extend.promise(', Array.prototype.slice.call(arguments) );
 
-		/* Parse array of constructor functions */
-		function get_all_methods(arr) {
-			return ARRAY(arr).map(function(m) {
-				return extend.getMethodNamesFromConstructor(m);
-			}).valueOf();
-		}
-
 		// Implement style extend.promise([Foobar, Array], p)
 		if(is.array(methods) && is.callable(methods[0])) {
 			return extend.promise( get_all_methods(methods) , p);
@@ -162,7 +157,6 @@ function setup(opts) {
 		if(is.callable(methods)) {
 			return extend.promise( extend.getMethodNamesFromConstructor(methods) , p);
 		}
-
 
 		/** Extend the value if it's a promise, otherwise just return it instead.
 		 * @returns the extended promise or the value itself.
@@ -241,26 +235,25 @@ function setup(opts) {
 				// Returned promise will be extended, too.
 				return extend_if_promise(methods, ret);
 			};
-	
+
 			// Ignore alias if it's already set, otherwise set it
 			if(p2[key] !== undefined) {
 				if(extend.warnings) { console.warn("Warning! Ignored alias method `"+key+"` for `$'+key+'` since it was already defined!"); }
 			} else {
 				p2[key] = p2['$'+key];
 			}
-	
+
 		});
-	
+
 		return p2;
 	};
-	
+
 	/** Copy object */
-	extend.copy = function(obj) {
-		// FIXME: This type of cloning is probably quite slow...
-		return JSON.parse(JSON.stringify(obj));
-	};
+	extend.copy = extend_copy;
 
 	return extend;
 }
+
+module.exports = setup();
 
 /* EOF */
