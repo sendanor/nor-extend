@@ -1,6 +1,7 @@
 /* Generic Node.js Database Library */
 "use strict";
 
+var FUNCTION = require('nor-function');
 var ARRAY = require('nor-array');
 var Q = require('q');
 var is = require('nor-is');
@@ -129,7 +130,7 @@ function setup(opts) {
 				if(extend.warnings) { console.warn("Warning! Ignored method `"+key+"` since it is not defined in the target object!"); }
 				return;
 			}
-			obj['$'+key] = self2[key].bind(self2);
+			obj['$'+key] = FUNCTION(self2[key]).bind(self2);
 
 			if(obj[key] === undefined) {
 				obj[key] = obj['$'+key];
