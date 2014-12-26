@@ -20,11 +20,11 @@ function get_method_names_from_constructor() {
 	var args = Array.prototype.slice.call(arguments);
 	ARRAY(args).forEach(function(fun) {
 		if(is.array(fun)) {
-			ARRAY(fun).forEach(function(x) { ret.push.apply(ret, get_method_names_from_constructor(x)); });
+			ARRAY(fun).forEach(function(x) { FUNCTION(ret.push).apply(ret, get_method_names_from_constructor(x)); });
 			return;
 		}
 		if(fun && fun.prototype) {
-			ret.push.apply(ret, Object.getOwnPropertyNames(fun.prototype));
+			FUNCTION(ret.push).apply(ret, Object.getOwnPropertyNames(fun.prototype));
 		}
 	});
 	return ret;
@@ -64,7 +64,7 @@ function setup(opts) {
 		var f = function() {
 			var args = Array.prototype.slice.call(arguments);
 			return f.then(function(ff) {
-				return ff.apply(f, args);
+				return FUNCTION(ff).apply(f, args);
 			});
 		};
 		f._promise = p;
@@ -194,12 +194,11 @@ function setup(opts) {
 				var args = Array.prototype.slice.call(arguments);
 
 				// Call p[key] with same arguments and extend the result if it's a promise.
-				//return extend_if_promise( methods, p[key].apply(p, args) );
+				//return extend_if_promise( methods, FUNCTION(p[key]).apply(p, args) );
 
-				//var ret = p[key].apply(p, args);
+				//var ret = FUNCTION(p[key]).apply(p, args);
 
-				var ret;
-				ret = p[key].apply(p, args);
+				var ret = FUNCTION(p[key]).apply(p, args);
 				return extend_if_promise( methods, ret );
 			};
 
@@ -225,7 +224,7 @@ function setup(opts) {
 				var ret = p.then(function(obj) {                   // Get a promise of calling obj[key] with same arguments as the proxy
 					//debug_call('extend.promise: p2.$'+key+': p.then', Array.prototype.slice.call(arguments) );
 					if(obj && is.callable(obj[key]) ) {            // Check if obj[key] is callable
-						return extend_if_promise( extend.getMethodNamesFromObject(obj), obj[key].apply(obj, args));          // ...and if so, call obj[key] with same arguments
+						return extend_if_promise( extend.getMethodNamesFromObject(obj), FUNCTION(obj[key]).apply(obj, args));          // ...and if so, call obj[key] with same arguments
 					} else if(obj && (typeof obj[key] !== "undefined")) {
 						return obj[key];                           // ...otherwise just return obj[key]
 					} else {

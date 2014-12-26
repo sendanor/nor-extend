@@ -2,6 +2,7 @@
 
 "use strict";
 
+var FUNCTION = require('nor-function');
 var util = require("util");
 var events = require("events");
 var extend = require('./extend.js');
@@ -13,7 +14,7 @@ function build_public_method(key) {
 		//console.error('CALL: unnamed() inside build_public_method('+ util.inspect(key) +') at ' + __filename + ':14');
 		var self = this;
 		var args = Array.prototype.slice.call(arguments);
-		var p = self[key].apply(self, args).then(function(data) {
+		var p = FUNCTION(self[key]).apply(self, args).then(function(data) {
 			return self._save( data );
 		});
 		return extend.promise(self.constructor, p);
