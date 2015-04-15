@@ -181,3 +181,8 @@ However Q promise methods will be extended to support your methods, so you can
 chain like `obj.foo(1).bar(2).then(function(x) { x.something(); return x; }).x()`. 
 Please remember to return the instance which you will be calling, obviously 
 otherwise it will not work.
+
+Commercial Support
+------------------
+
+You can buy commercial support from [Sendanor](http://sendanor.com/software).
