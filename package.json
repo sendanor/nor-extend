@@ -1,6 +1,6 @@
 {
   "name": "nor-extend",
-  "version": "0.1.33",
+  "version": "1.0.0",
   "description": "Extends Q promises with custom methods from another object",
   "main": "src/index.js",
   "scripts": {
@@ -28,10 +28,10 @@
   },
   "dependencies": {
     "q"            : "^1.0.1",
-    "nor-is"       : "^0.1.18",
-    "nor-debug"    : "^0.1.55",
-    "nor-array"    : "^0.1.8",
-    "nor-function" : "^0.1.7"
+    "nor-is"       : "^1.0.0",
+    "nor-debug"    : "^1.0.0",
+    "nor-array"    : "^1.0.0",
+    "nor-function" : "^1.0.0"
   },
   "devDependencies": {
     "lint"      : "^1.1.2",
