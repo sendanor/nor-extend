@@ -1,10 +1,12 @@
 "use strict";
 
-var extend = require('nor-extend').setup({useFunctionPromises:true});
-var assert = require('assert');
-var Q = require('q');
+import EXTEND from 'nor-extend';
+import assert from 'assert';
+import Q from 'q';
 
-function get_names(obj) {
+let extend = EXTEND.setup({useFunctionPromises:true});
+
+function get_names (obj) {
 	return Object.getOwnPropertyNames(obj);
 }
 
@@ -50,9 +52,9 @@ describe('function-extend', function(){
 			}
 			Foo.prototype.foo = function() { return 1; }
 			Foo.prototype.bar = function() { return 2; }
-			var foo = new Foo();
-			var obj = ["hello", "world"];
-			var extended_obj = extend.object(foo, extend.getMethodNamesFromObject(foo), obj);
+			let foo = new Foo();
+			let obj = ["hello", "world"];
+			let extended_obj = extend.object(foo, extend.getMethodNamesFromObject(foo), obj);
 			assert.strictEqual( extended_obj[0], "hello" );
 			assert.strictEqual( extended_obj[1], "world" );
 			assert.strictEqual( extended_obj.foo(), 1 );
@@ -64,9 +66,9 @@ describe('function-extend', function(){
 			}
 			Foo.prototype.foo = function() { return 1; }
 			Foo.prototype.bar = function() { return 2; }
-			var foo = new Foo();
-			var obj = ["hello", "world"];
-			var extended_obj = extend.object(foo, Foo, obj);
+			let foo = new Foo();
+			let obj = ["hello", "world"];
+			let extended_obj = extend.object(foo, Foo, obj);
 			assert.strictEqual( extended_obj[0], "hello" );
 			assert.strictEqual( extended_obj[1], "world" );
 			assert.strictEqual( extended_obj.foo(), 1 );
@@ -77,9 +79,9 @@ describe('function-extend', function(){
 			function Foo() { }
 			Foo.prototype.foo = function() { return 1; }
 			Foo.prototype.bar = function() { return 2; }
-			var foo = new Foo();
-			var obj = ["hello", "world"];
-			var extended_obj = extend.object(foo, obj);
+			let foo = new Foo();
+			let obj = ["hello", "world"];
+			let extended_obj = extend.object(foo, obj);
 			assert.strictEqual( extended_obj[0], "hello" );
 			assert.strictEqual( extended_obj[1], "world" );
 			assert.strictEqual( extended_obj.foo(), 1 );
@@ -94,9 +96,9 @@ describe('function-extend', function(){
 			function Foo() {
 			}
 			Foo.prototype.foo = function() { return 1; }
-			var foo = new Foo();
-			var obj = ["hello", "world"];
-			var extended_obj = extend.object(foo, [Foo, Bar], obj);
+			let foo = new Foo();
+			let obj = ["hello", "world"];
+			let extended_obj = extend.object(foo, [Foo, Bar], obj);
 			assert.strictEqual( extended_obj[0], "hello" );
 			assert.strictEqual( extended_obj[1], "world" );
 			assert.strictEqual( extended_obj.foo(), 1 );
@@ -109,22 +111,23 @@ describe('function-extend', function(){
 	describe('.promise()', function(){
 
 		it('should extend Q promise with methods from Foobar', function(done){
-			function Foobar() {
-			}
-			Foobar.prototype.foo = function(x) { return x+1; }
-			Foobar.prototype.bar = function(x) { return x+2; }
 
-			var defer = Q.defer();
+			function Foobar () {
+			}
+
+			Foobar.prototype.foo = function(x) { return x+1; };
+			Foobar.prototype.bar = function(x) { return x+2; };
+
+			let defer = Q.defer();
 			setTimeout(function() {
 				defer.resolve( new Foobar() );
 			}, 200);
-			var p = defer.promise;
+			let p = defer.promise;
 
-			var methods = extend.getMethodNamesFromConstructor(Foobar);
-			var extended_p = extend.promise( methods, p);
+			let methods = extend.getMethodNamesFromConstructor(Foobar);
+			let extended_p = extend.promise( methods, p);
 
-			assert.strictEqual( typeof extended_p, 'function' );
-			assert.strictEqual( typeof extended_p._promise, 'object' );
+			assert.strictEqual( typeof extended_p, 'function', "extended promise must be a function" );
 			assert.strictEqual( typeof extended_p.foo, 'function' );
 			assert.strictEqual( typeof extended_p.bar, 'function' );
 
@@ -138,17 +141,16 @@ describe('function-extend', function(){
 
 		it('should extend Q promise with methods from Array', function(done){
 
-			var defer = Q.defer();
+			let defer = Q.defer();
 			setTimeout(function() {
 				defer.resolve( ["hello", "world", "foo", "bar"] );
 			}, 200);
-			var p = defer.promise;
+			let p = defer.promise;
 
-			var methods = extend.getMethodNamesFromConstructor(Array);
-			var extended_p = extend.promise( methods, p);
+			let methods = extend.getMethodNamesFromConstructor(Array);
+			let extended_p = extend.promise( methods, p);
 
 			assert.strictEqual( typeof extended_p, 'function' );
-			assert.strictEqual( typeof extended_p._promise, 'object' );
 			assert.strictEqual( typeof extended_p.shift, 'function' );
 
 			extended_p.shift().then(function(x) {
@@ -190,17 +192,16 @@ describe('function-extend', function(){
 				return this.x;
 			};
 
-			var defer = Q.defer();
+			let defer = Q.defer();
 			setTimeout(function() {
 				defer.resolve( new Foobar(1000) );
 			}, 200);
-			var p = defer.promise;
+			let p = defer.promise;
 
-			var methods = extend.getMethodNamesFromConstructor(Foobar);
-			var extended_p = extend.promise( methods, p);
+			let methods = extend.getMethodNamesFromConstructor(Foobar);
+			let extended_p = extend.promise( methods, p);
 
 			assert.strictEqual( typeof extended_p, 'function' );
-			assert.strictEqual( typeof extended_p._promise, 'object' );
 			assert.strictEqual( typeof extended_p.inc, 'function' );
 			assert.strictEqual( typeof extended_p.dec, 'function' );
 			assert.strictEqual( typeof extended_p.get, 'function' );
@@ -225,7 +226,7 @@ describe('function-extend', function(){
 			}
 
 			Foobar.create = function(x) {
-				var defer = Q.defer();
+				let defer = Q.defer();
 				setTimeout(function() {
 					try {
 						defer.resolve( new Foobar(x) );
@@ -237,8 +238,8 @@ describe('function-extend', function(){
 			};
 
 			Foobar.prototype.inc = function(x) {
-				var self = this;
-				var defer = Q.defer();
+				let self = this;
+				let defer = Q.defer();
 				setTimeout(function() {
 					try {
 						assert.strictEqual(typeof self.x, 'number');
@@ -254,8 +255,8 @@ describe('function-extend', function(){
 			};
 
 			Foobar.prototype.dec = function(x) {
-				var self = this;
-				var defer = Q.defer();
+				let self = this;
+				let defer = Q.defer();
 				setTimeout(function() {
 					try {
 						assert.strictEqual(typeof self.x, 'number');
@@ -271,8 +272,8 @@ describe('function-extend', function(){
 			};
 
 			Foobar.prototype.get = function() {
-				var self = this;
-				var defer = Q.defer();
+				let self = this;
+				let defer = Q.defer();
 				setTimeout(function() {
 					try {
 						assert.strictEqual(typeof self.x, 'number');
@@ -285,13 +286,12 @@ describe('function-extend', function(){
 				return defer.promise;
 			};
 
-			var p = Foobar.create(1000);
+			let p = Foobar.create(1000);
 
-			var methods = extend.getMethodNamesFromConstructor(Foobar);
-			var extended_p = extend.promise( methods, p);
+			let methods = extend.getMethodNamesFromConstructor(Foobar);
+			let extended_p = extend.promise( methods, p);
 
 			assert.strictEqual( typeof extended_p, 'function' );
-			assert.strictEqual( typeof extended_p._promise, 'object' );
 			assert.strictEqual( typeof extended_p.inc, 'function' );
 			assert.strictEqual( typeof extended_p.dec, 'function' );
 			assert.strictEqual( typeof extended_p.get, 'function' );
@@ -314,7 +314,7 @@ describe('function-extend', function(){
 			}
 
 			Foobar.create = function(x) {
-				var defer = Q.defer();
+				let defer = Q.defer();
 				setTimeout(function() {
 					try {
 						defer.resolve( new Foobar(x) );
@@ -326,8 +326,8 @@ describe('function-extend', function(){
 			};
 
 			Foobar.prototype.inc = function(x) {
-				var self = this;
-				var defer = Q.defer();
+				let self = this;
+				let defer = Q.defer();
 				setTimeout(function() {
 					try {
 						assert.strictEqual(typeof self.x, 'number');
@@ -343,8 +343,8 @@ describe('function-extend', function(){
 			};
 
 			Foobar.prototype.dec = function(x) {
-				var self = this;
-				var defer = Q.defer();
+				let self = this;
+				let defer = Q.defer();
 				setTimeout(function() {
 					try {
 						assert.strictEqual(typeof self.x, 'number');
@@ -360,8 +360,8 @@ describe('function-extend', function(){
 			};
 
 			Foobar.prototype.get = function() {
-				var self = this;
-				var defer = Q.defer();
+				let self = this;
+				let defer = Q.defer();
 				setTimeout(function() {
 					try {
 						assert.strictEqual(typeof self.x, 'number');
@@ -374,10 +374,9 @@ describe('function-extend', function(){
 				return extend.promise( extend.getMethodNamesFromConstructor(Foobar), defer.promise);
 			};
 
-			var p = Foobar.create(1000);
+			let p = Foobar.create(1000);
 
 			assert.strictEqual( typeof p, 'function' );
-			assert.strictEqual( typeof p._promise, 'object' );
 			assert.strictEqual( typeof p.inc, 'function' );
 			assert.strictEqual( typeof p.dec, 'function' );
 			assert.strictEqual( typeof p.get, 'function' );
@@ -402,7 +401,7 @@ describe('function-extend', function(){
 			}
 
 			Foobar.create = function(x) {
-				var defer = Q.defer();
+				let defer = Q.defer();
 				setTimeout(function() {
 					try {
 						defer.resolve( new Foobar(x) );
@@ -414,8 +413,8 @@ describe('function-extend', function(){
 			};
 
 			Foobar.prototype.query = function(x) {
-				var self = this;
-				var defer = Q.defer();
+				let self = this;
+				let defer = Q.defer();
 				setTimeout(function() {
 					try {
 						assert.strictEqual(typeof x, 'number');
@@ -429,10 +428,9 @@ describe('function-extend', function(){
 				return extend.promise( Array, defer.promise);
 			};
 
-			var p = Foobar.create(1000);
+			let p = Foobar.create(1000);
 
 			assert.strictEqual( typeof p, 'function' );
-			assert.strictEqual( typeof p._promise, 'object' );
 			assert.strictEqual( typeof p.$query, 'function' );
 			assert.strictEqual( typeof p.$shift, 'function' );
 
@@ -450,16 +448,16 @@ describe('function-extend', function(){
 	// extend.copy(obj)
 	describe('.copy()', function(){
 		it('should copy an object', function(){
-			var obj = {'foo':'bar'};
-			var obj2 = extend.copy(obj);
+			let obj = {'foo':'bar'};
+			let obj2 = extend.copy(obj);
 			assert.strictEqual( obj2.foo, obj.foo );
 			obj.foo = 'hello world';
 			assert.strictEqual( obj.foo, 'hello world' );
 			assert.strictEqual( obj2.foo, 'bar' );
 		});
 		it('should deep copy an object', function(){
-			var obj = {'foo':{'hello':'world'}};
-			var obj2 = extend.copy(obj);
+			let obj = {'foo':{'hello':'world'}};
+			let obj2 = extend.copy(obj);
 			assert.strictEqual( obj2.foo.hello, 'world' );
 			obj.foo.hello = 'hello world';
 			assert.strictEqual( obj.foo.hello, 'hello world' );

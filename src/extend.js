@@ -15,6 +15,7 @@ const PROMISE_METHODS = [
 	'catch',
 	'fail',
 	'finally',
+	'done',
 	'fin'
 ];
 
@@ -233,7 +234,7 @@ function setup ({
 
 				let ret = p.then(obj => {                   // Get a promise of calling obj[key] with same arguments as the proxy
 					if (obj && is.callable(obj[key]) ) {            // Check if obj[key] is callable
-						return extendIfPromise( extend.getMethodNamesFromObject(obj), FUNCTION(obj[key]).apply(obj, args));          // ...and if so, call obj[key] with same arguments
+						return extendIfPromise( extend.getMethodNamesFromObject(obj), obj[key](...args) );          // ...and if so, call obj[key] with same arguments
 					} else if (obj && (typeof obj[key] !== "undefined")) {
 						return obj[key];                           // ...otherwise just return obj[key]
 					} else {
