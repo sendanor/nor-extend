@@ -19,7 +19,7 @@ const PRIVATE = {
 function buildPublicMethod (key) {
 	return function (...args) {
 		const p = this[key](...args).then(data => this[PRIVATE.save](data));
-		return extend.promise(self.constructor, p);
+		return extend.promise(this.constructor, p);
 	};
 }
 
