@@ -1,56 +1,78 @@
-/** */
+/*
+ * ActionObject for nor-extend, without events
+ */
 
 "use strict";
 
-var FUNCTION = require('nor-function');
-var util = require("util");
-var extend = require('./extend.js');
+import extend from "./extend.js";
 
-/** Setup public actions */
-function build_public_method(key) {
-	//console.error('CALL: build_public_method('+ util.inspect(key) +') at ' + __filename + ':11');
-	return function() {
-		//console.error('CALL: unnamed() inside build_public_method('+ util.inspect(key) +') at ' + __filename + ':14');
-		var self = this;
-		var args = Array.prototype.slice.call(arguments);
-		var p = FUNCTION(self[key]).apply(self, args).then(function(data) {
-			return self._save( data );
-		});
+const PRIVATE = {
+	save: Symbol('_save'),
+	results: Symbol('_results')
+};
+
+/** Setup public actions
+ *
+ * @param key {string|symbol}
+ * @returns {function(...[*]): (*|*)}
+ */
+function buildPublicMethod (key) {
+	return function (...args) {
+		const p = this[key](...args).then(data => this[PRIVATE.save](data));
 		return extend.promise(self.constructor, p);
 	};
 }
 
-/** Base class for chainable action objects */
-function ActionObject() {
-	this._results = [];
+export default class ActionObject {
+
+	/** Base class for chainable action objects
+	 *
+	 */
+	constructor () {
+		this[PRIVATE.results] = [];
+	}
+
+	/** Save result into the internal queue
+	 *
+	 * @param result
+	 * @returns {ActionObject}
+	 * @private
+	 */
+	[PRIVATE.save] (result) {
+		this[PRIVATE.results].push( result );
+		return this;
+	}
+
+	/** Fetch all resources
+	 *
+	 * @returns {*}
+	 */
+	fetchAll () {
+		const all = this[PRIVATE.results];
+		this[PRIVATE.results] = [];
+		return all;
+	}
+
+	/** Fetch next result from the internal result array
+	 *
+	 * @returns {*|T}
+	 */
+	fetch () {
+		return this[PRIVATE.results].shift();
+	}
+
+	/** Setup new action
+	 *
+	 * @param ChildType
+	 * @param key
+	 * @param func
+	 * @returns {symbol}
+	 */
+	static setup (ChildType, key, func) {
+		const privateSymbol = Symbol(key);
+		ChildType.prototype[key] = buildPublicMethod(privateSymbol);
+		ChildType.prototype[privateSymbol] = func;
+		return privateSymbol;
+	}
+
 }
-
-/** Save result into the internal queue */
-ActionObject.prototype._save = function(result){
-	var self = this;
-	this._results.push( result );
-	return self;
-};
-
-/** Fetch all resources */
-ActionObject.prototype.fetchAll = function(){
-	var all = this._results;
-	this._results = [];
-	return all;
-};
-
-/** Fetch next result from the internal result array */
-ActionObject.prototype.fetch = function(){
-	return this._results.shift();
-};
-
-/** Setup new action */
-ActionObject.setup = function(ChildType, key, func) {
-	ChildType.prototype[key] = build_public_method('_'+key);
-	ChildType.prototype['_'+key] = func;
-};
-
-// Exports
-module.exports = ActionObject;
-
-/* EOF */

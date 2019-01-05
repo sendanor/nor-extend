@@ -1,95 +1,119 @@
-/* Generic Node.js Database Library */
+/* Extends promises with custom methods from another object
+ * Copyright 2014-2019 Jaakko-Heikki Heusala <jheusala@iki.fi>
+ */
+
 "use strict";
 
-var FUNCTION = require('nor-function');
-var ARRAY = require('nor-array');
-var Q = require('q');
-var is = require('nor-is');
+import is from '@norjs/is';
+
+const PRIVATE = {
+	promise: Symbol('_promise')
+};
+
+const PROMISE_METHODS = [
+	'then',
+	'catch',
+	'fail',
+	'finally',
+	'done',
+	'fin'
+];
 
 /** Copy object */
-function extend_copy(obj) {
+function extendCopy (obj) {
 	return JSON.parse(JSON.stringify(obj));
 }
 
 /** Get method names from an object's constructor
- * @param {function} Object constructor function
- * @returns {array} Method names
+ * @returns {Array} Method names
+ * @param args
  */
-function get_method_names_from_constructor() {
-	var ret = [];
-	var args = Array.prototype.slice.call(arguments);
-	ARRAY(args).forEach(function(fun) {
-		if(is.array(fun)) {
-			ARRAY(fun).forEach(function(x) { FUNCTION(ret.push).apply(ret, get_method_names_from_constructor(x)); });
+function getMethodNamesFromConstructor (...args) {
+	let ret = [];
+	args.forEach(fun => {
+		if (is.array(fun)) {
+			fun.forEach(x => {
+				const retPushArgs = getMethodNamesFromConstructor(x);
+				ret.push(...retPushArgs);
+			});
 			return;
 		}
-		if(fun && fun.prototype) {
-			FUNCTION(ret.push).apply(ret, Object.getOwnPropertyNames(fun.prototype));
+		if (fun && fun.prototype) {
+			const retPushArgs = Object.getOwnPropertyNames(fun.prototype);
+			ret.push(...retPushArgs);
 		}
 	});
 	return ret;
 }
 
-/* Parse array of constructor functions */
-function get_all_methods(arr) {
-	return ARRAY(arr).map(function(m) {
-		return get_method_names_from_constructor(m);
-	}).reduce(function(prev, current) {
-		return prev.concat(current);
-	}, ARRAY([]) ).valueOf();
+/** Parse array of constructor functions
+ *
+ * @param arr {Array}
+ * @returns {*}
+ */
+function getAllMethods (arr) {
+	return arr.map(m => getMethodNamesFromConstructor(m)).reduce(( prev, current ) => prev.concat(current), [] );
 }
 
-/** Setup function */
-function setup(opts) {
-	opts = opts || {};
+/** Setup function
+ *
+ * @param warnings {boolean}
+ * @param useFunctionPromises {boolean}
+ */
+function setup ({
+    warnings = false,
+    useFunctionPromises = false
+} = {}) {
 
-	var extend = {};
+	let extend = {};
 	extend.setup = setup;
-	extend.warnings = opts.warnings || false;
-	extend.useFunctionPromises = opts.useFunctionPromises || false;
-	extend.getMethodNamesFromConstructor = get_method_names_from_constructor;
+	extend.warnings = warnings;
+	extend.useFunctionPromises = useFunctionPromises;
+	extend.getMethodNamesFromConstructor = getMethodNamesFromConstructor;
 
 	/** Extended promise constructor */
-	function ExtendedPromise() {
-		//debug_call('ExtendedPromise', Array.prototype.slice.call(arguments) );
+	class ExtendedPromise {
+
+		/** Creates extended promise
+		 *
+		 * @returns {*}
+		 */
+		static create () {
+
+			if (!extend.useFunctionPromises) {
+				return new ExtendedPromise();
+			}
+
+			let p = new ExtendedPromise();
+			let f = ( ...args ) => f.then(ff => ff.apply(f, args));
+			f[PRIVATE.promise] = p;
+			return f;
+		}
+
+		/** Returns `true` if argument is extended promise
+		 *
+		 * @param f
+		 * @returns {boolean}
+		 */
+		static test (f) {
+			if (extend.useFunctionPromises) {
+				return !!(f && (f[PRIVATE.promise] instanceof ExtendedPromise));
+			} else {
+				return f instanceof ExtendedPromise;
+			}
+		}
+
 	}
-
-	/** Creates extended promise */
-	ExtendedPromise.create = function() {
-		if(!extend.useFunctionPromises) {
-			return new ExtendedPromise();
-		}
-
-		var p = new ExtendedPromise();
-		var f = function() {
-			var args = Array.prototype.slice.call(arguments);
-			return f.then(function(ff) {
-				return FUNCTION(ff).apply(f, args);
-			});
-		};
-		f._promise = p;
-		return f;
-	};
-
-	/** Returns `true` if argument is extended promise */
-	ExtendedPromise.test = function(f) {
-		if(extend.useFunctionPromises) {
-			return (f && (f._promise instanceof ExtendedPromise)) ? true : false;
-		} else {
-			return (f instanceof ExtendedPromise) ? true : false;
-		}
-	};
 
 	extend.Promise = ExtendedPromise;
 	extend.ExtendedPromise = ExtendedPromise;
 
 	/** Get method names from an object's prototype
-	 * @param {object} Object where to get method names
+	 * @param obj {object} where to get method names
 	 * @returns {array} Method names
 	 */
-	extend.getMethodNamesFromObject = function(obj) {
-		//debug_call('extend.getMethodNamesFromObject', Array.prototype.slice.call(arguments) );
-		if(obj && obj.constructor) {
+	extend.getMethodNamesFromObject = obj => {
+		if (obj && obj.constructor) {
 			return extend.getMethodNamesFromConstructor(obj.constructor);
 		}
 		return [];
@@ -102,40 +126,39 @@ function setup(opts) {
 	 * @returns {Object} extended object
 	 * @todo Returned new object should be complete new object so parameter `obj` WOULD NOT BE CHANGED!
 	 */
-	extend.object = function(self2, methods, obj) { // original extend_obj()
-		//debug_call('extend.object', Array.prototype.slice.call(arguments) );
+	extend.object = ( self2, methods, obj ) => { // original extend_obj()
 
 		// Enable auto detection of optional methods parameter
-		if(obj === undefined) {
+		if (obj === undefined) {
 			return extend.object(self2, extend.getMethodNamesFromObject(self2), methods);
 		}
 
 		// Implement style extend.object(foo, [Foobar, Array], bar)
-		if(is.array(methods) && is.callable(methods[0])) {
-			return extend.object(self2, get_all_methods(methods) , obj);
+		if (is.array(methods) && is.callable(methods[0])) {
+			return extend.object(self2, getAllMethods(methods) , obj);
 		}
 
 		// Implement style extend.object(foo, Array, obj)
-		if(is.callable(methods)) {
+		if (is.callable(methods)) {
 			return extend.object(self2, extend.getMethodNamesFromConstructor(methods) , obj);
 		}
 
 		//
-		ARRAY(methods).forEach(function(key) {
-			if(obj['$'+key] !== undefined) {
-				if(extend.warnings) { console.warn("Warning! Ignored `$"+key+"` since it is defined already!"); }
+		methods.forEach(key => {
+			if (obj['$'+key] !== undefined) {
+				if (extend.warnings) { console.warn("Warning! Ignored `$"+key+"` since it is defined already!"); }
 				return;
 			}
-			if(self2[key] === undefined) {
-				if(extend.warnings) { console.warn("Warning! Ignored method `"+key+"` since it is not defined in the target object!"); }
+			if (self2[key] === undefined) {
+				if (extend.warnings) { console.warn("Warning! Ignored method `"+key+"` since it is not defined in the target object!"); }
 				return;
 			}
-			obj['$'+key] = FUNCTION(self2[key]).bind(self2);
+			obj['$'+key] = self2[key].bind(self2);
 
-			if(obj[key] === undefined) {
+			if (obj[key] === undefined) {
 				obj[key] = obj['$'+key];
 			} else {
-				if(extend.warnings) { console.warn("Warning! Ignored method `"+key+"` since it is defined already!"); }
+				if (extend.warnings) { console.warn("Warning! Ignored method `"+key+"` since it is defined already!"); }
 			}
 		});
 		return obj;
@@ -146,86 +169,73 @@ function setup(opts) {
 	 * @param p {Promise} The generic promise object
 	 * @returns {object} An object which has methods from both the Promise and all custom methods.
 	 */
-	extend.promise = function(methods, p) { // original extend_promise
+	extend.promise = ( methods, p ) => { // original extend_promise
 		//debug_call('extend.promise(', Array.prototype.slice.call(arguments) );
 
 		// Implement style extend.promise([Foobar, Array], p)
-		if(is.array(methods) && is.callable(methods[0])) {
-			return extend.promise( get_all_methods(methods) , p);
+		if (is.array(methods) && is.callable(methods[0])) {
+			return extend.promise( getAllMethods(methods) , p);
 		}
 
 		// Implement style extend.promise(Array, p)
-		if(is.callable(methods)) {
+		if (is.callable(methods)) {
 			return extend.promise( extend.getMethodNamesFromConstructor(methods) , p);
 		}
 
 		/** Extend the value if it's a promise, otherwise just return it instead.
 		 * @returns the extended promise or the value itself.
 		 */
-		function extend_if_promise(methods, ret) {
-			//debug_call('extend.promise: extend_if_promise', Array.prototype.slice.call(arguments) );
-			if(ExtendedPromise.test(ret)) {
+		function extendIfPromise (methods, ret) {
+			if (ExtendedPromise.test(ret)) {
 				return ret;
 			}
-			if(ret && ret.then) {                                 // Check if return value is promise compatible
+			if (ret && ret.then) {                                 // Check if return value is promise compatible
 				return extend.promise(methods, ret);              // ..and if so, extend it, too.
 			}
 			return ret;                                           // ..and if not, return the same value.
 		}
 
-		var promise_methods = extend.getMethodNamesFromConstructor(Q.makePromise);
-
-		var p2 = ExtendedPromise.create();
+		let p2 = ExtendedPromise.create();
 
 		// Setup proxy methods for Promise type
-		ARRAY(promise_methods).forEach(function(key) {
+		PROMISE_METHODS.forEach(key => {
 
 			// Ignore this method if it has been defined already
-			if(p2[key] !== undefined) {
-				if(extend.warnings) { console.warn("Warning! Ignored method `"+key+"` since it was already defined! (#2)"); }
+			if (p2[key] !== undefined) {
+				if (extend.warnings) { console.warn("Warning! Ignored method `"+key+"` since it was already defined! (#2)"); }
 				return;
 			}
 
-			/* Setups a proxy method that will call p[key] with same arguments as the proxy function was called.
-			 * If that call returns a promise, we'll extend it too, otherwise it returns the same value.
-			 */
-			p2[key] = function() {
-				//debug_call('extend.promise: p2.'+key, Array.prototype.slice.call(arguments) );
-				var args = Array.prototype.slice.call(arguments);
-
-				// Call p[key] with same arguments and extend the result if it's a promise.
-				//return extend_if_promise( methods, FUNCTION(p[key]).apply(p, args) );
-
-				//var ret = FUNCTION(p[key]).apply(p, args);
-
-				var ret = FUNCTION(p[key]).apply(p, args);
-				return extend_if_promise( methods, ret );
-			};
+			// Setups a proxy method that will call p[key] with same arguments as the proxy function was called.
+			// If that call returns a promise, we'll extend it too, otherwise it returns the same value.
+			if (is.callable(p[key])) {
+				p2[key] = ( ...args ) => {
+					const ret = p[key](...args);
+					return extendIfPromise( methods, ret );
+				};
+			}
 
 		});
 
 		// Setup other custom proxy methods
-		ARRAY(methods).forEach(function(key) {
+		methods.forEach(key => {
 
 			// Ignore this method if it has been defined already
-			if(p2['$'+key] !== undefined) {
-				if(extend.warnings) { console.warn("Warning! Ignored method `$"+key+"` since it was already defined!"); }
+			if (p2['$'+key] !== undefined) {
+				if (extend.warnings) { console.warn("Warning! Ignored method `$"+key+"` since it was already defined!"); }
 				return;
 			}
 
 			/* Setups a proxy method that will call `p.then(function(obj) { obj[key](...) }` with same arguments as the proxy function was called.
 			 * Returns a promise which also will be extended recursively.
 			 */
-			p2['$'+key] = function() {
+			p2['$'+key] = ( ...args ) => {
 				//debug_call('extend.promise: p2.$'+key, Array.prototype.slice.call(arguments) );
 
-				var args = Array.prototype.slice.call(arguments);
-
-				var ret = p.then(function(obj) {                   // Get a promise of calling obj[key] with same arguments as the proxy
-					//debug_call('extend.promise: p2.$'+key+': p.then', Array.prototype.slice.call(arguments) );
-					if(obj && is.callable(obj[key]) ) {            // Check if obj[key] is callable
-						return extend_if_promise( extend.getMethodNamesFromObject(obj), FUNCTION(obj[key]).apply(obj, args));          // ...and if so, call obj[key] with same arguments
-					} else if(obj && (typeof obj[key] !== "undefined")) {
+				let ret = p.then(obj => {                   // Get a promise of calling obj[key] with same arguments as the proxy
+					if (obj && is.callable(obj[key]) ) {            // Check if obj[key] is callable
+						return extendIfPromise( extend.getMethodNamesFromObject(obj), obj[key](...args) );          // ...and if so, call obj[key] with same arguments
+					} else if (obj && (typeof obj[key] !== "undefined")) {
 						return obj[key];                           // ...otherwise just return obj[key]
 					} else {
 						throw new ReferenceError("Cannot call property "+key+" of "+obj);
@@ -233,12 +243,12 @@ function setup(opts) {
 				});
 
 				// Returned promise will be extended, too.
-				return extend_if_promise(methods, ret);
+				return extendIfPromise(methods, ret);
 			};
 
 			// Ignore alias if it's already set, otherwise set it
-			if(p2[key] !== undefined) {
-				if(extend.warnings) { console.warn("Warning! Ignored alias method `"+key+"` for `$'+key+'` since it was already defined!"); }
+			if (p2[key] !== undefined) {
+				if (extend.warnings) { console.warn("Warning! Ignored alias method `"+key+"` for `$'+key+'` since it was already defined!"); }
 			} else {
 				p2[key] = p2['$'+key];
 			}
@@ -249,11 +259,11 @@ function setup(opts) {
 	};
 
 	/** Copy object */
-	extend.copy = extend_copy;
+	extend.copy = extendCopy;
 
 	return extend;
 }
 
-module.exports = setup();
+const extend = setup();
 
-/* EOF */
+export default extend;
